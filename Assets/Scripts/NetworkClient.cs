@@ -5,6 +5,7 @@ using NetworkMessages;
 using NetworkObjects;
 using System;
 using System.Text;
+using System.Collections;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -31,11 +32,24 @@ public class NetworkClient : MonoBehaviour
 
     void OnConnect(){
         Debug.Log("We are now connected to the server");
+        StartCoroutine(SendRepeatedHandshake());
 
         //// Example to send a handshake message:
         // HandshakeMsg m = new HandshakeMsg();
         // m.player.id = m_Connection.InternalId.ToString();
         // SendToServer(JsonUtility.ToJson(m));
+    }
+
+    IEnumerator SendRepeatedHandshake()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(2);
+            Debug.Log("Sending handshake");
+            HandshakeMsg m = new HandshakeMsg();
+            m.player.id = m_Connection.InternalId.ToString();
+            SendToServer(JsonUtility.ToJson(m));
+        }
     }
 
     void OnData(DataStreamReader stream){
