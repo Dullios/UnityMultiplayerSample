@@ -8,7 +8,8 @@ namespace NetworkMessages
         PLAYER_UPDATE,
         SERVER_UPDATE,
         HANDSHAKE,
-        PLAYER_INPUT
+        PLAYER_INPUT,
+        INITIALIZE
     }
 
     [System.Serializable]
@@ -47,6 +48,16 @@ namespace NetworkMessages
         public ServerUpdateMsg(){      // Constructor
             cmd = Commands.SERVER_UPDATE;
             players = new List<NetworkObjects.NetworkPlayer>();
+        }
+    }
+
+    [System.Serializable]
+    public class InitializeConnectionMsg:NetworkHeader
+    {
+        public string connectionID;
+        public InitializeConnectionMsg()
+        {
+            cmd = Commands.INITIALIZE;
         }
     }
 } 

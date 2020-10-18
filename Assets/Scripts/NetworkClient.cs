@@ -14,7 +14,8 @@ public class NetworkClient : MonoBehaviour
     public string serverIP;
     public ushort serverPort;
 
-    
+    public int connectedID;
+
     void Start ()
     {
         m_Driver = NetworkDriver.Create();
@@ -33,11 +34,6 @@ public class NetworkClient : MonoBehaviour
     void OnConnect(){
         Debug.Log("We are now connected to the server");
         StartCoroutine(SendRepeatedHandshake());
-
-        //// Example to send a handshake message:
-        // HandshakeMsg m = new HandshakeMsg();
-        // m.player.id = m_Connection.InternalId.ToString();
-        // SendToServer(JsonUtility.ToJson(m));
     }
 
     IEnumerator SendRepeatedHandshake()
@@ -58,22 +54,28 @@ public class NetworkClient : MonoBehaviour
         string recMsg = Encoding.ASCII.GetString(bytes.ToArray());
         NetworkHeader header = JsonUtility.FromJson<NetworkHeader>(recMsg);
 
-        switch(header.cmd){
+        switch (header.cmd)
+        {
             case Commands.HANDSHAKE:
-            HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
-            Debug.Log("Handshake message received!");
-            break;
+                HandshakeMsg hsMsg = JsonUtility.FromJson<HandshakeMsg>(recMsg);
+                Debug.Log("Handshake message received!");
+                break;
             case Commands.PLAYER_UPDATE:
-            PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
-            Debug.Log("Player update message received!");
-            break;
+                PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
+                Debug.Log("Player update message received!");
+                break;
             case Commands.SERVER_UPDATE:
-            ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
-            Debug.Log("Server update message received!");
-            break;
+                ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
+                Debug.Log("Server update message received!");
+                break;
+            case Commands.INITIALIZE:
+                InitializeConnectionMsg icMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
+                connectedID = int.Parse(icMsg.connectionID);
+                Debug.Log("Initialize Connection message received!");
+                break;
             default:
-            Debug.Log("Unrecognized message received!");
-            break;
+                Debug.Log("Unrecognized message received!");
+                break;
         }
     }
 
