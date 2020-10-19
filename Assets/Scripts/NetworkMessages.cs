@@ -78,4 +78,16 @@ namespace NetworkObjects
             cubPos = new Vector3();
         }
     }
+
+    [System.Serializable]
+    public class CubeDetails
+    {
+        public GameObject cube;
+        public int cubeID;
+
+        public CubeDetails(int id)
+        {
+            cubeID = id;
+        }
+    }
 }

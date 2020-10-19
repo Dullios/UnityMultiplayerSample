@@ -10,12 +10,6 @@ using System.Collections.Generic;
 
 public class NetworkClient : MonoBehaviour
 {
-    public struct CubeDetails
-    {
-        public int cubeID;
-        public bool isCreated;
-    }
-
     public NetworkDriver m_Driver;
     public NetworkConnection m_Connection;
     public string serverIP;
@@ -80,7 +74,7 @@ public class NetworkClient : MonoBehaviour
 
                 foreach (NetworkObjects.NetworkPlayer npServer in suMsg.players)
                 {
-                    if (playerList.Count < 1)
+                    if (playerList.Count == 0)
                         playerList.Add(npServer);
                     else
                     {
@@ -96,6 +90,8 @@ public class NetworkClient : MonoBehaviour
                         }
                     }
                 }
+
+                UpdateCubes();
                 break;
             case Commands.INITIALIZE:
                 InitializeConnectionMsg icMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
@@ -111,7 +107,44 @@ public class NetworkClient : MonoBehaviour
 
     void UpdateCubes()
     {
+        if(cubeDetList.Count == 0)
+        {
+            foreach(NetworkObjects.NetworkPlayer npClient in playerList)
+            {
+                CreateCube(npClient);
+            }
+        }
+        else
+        {
+            bool hasCube = false;
 
+            foreach (NetworkObjects.NetworkPlayer npClient in playerList)
+            {
+                foreach(CubeDetails cd in cubeDetList)
+                {
+                    if(cd.cubeID == int.Parse(npClient.id))
+                    {
+                        cd.cube.transform.position = npClient.cubPos;
+                        hasCube = true;
+                    }
+                }
+
+                if(!hasCube)
+                {
+                    CreateCube(npClient);
+                }
+            }
+        }
+    }
+
+    void CreateCube(NetworkObjects.NetworkPlayer npClient)
+    {
+        CubeDetails cDet = new CubeDetails(int.Parse(npClient.id));
+        cDet.cube = GameObject.Instantiate(cubePrefab, npClient.cubPos, Quaternion.identity);
+        cDet.cube.GetComponent<MeshRenderer>().material.color = npClient.cubeColor;
+        cDet.cube.GetComponent<CubeController>().netClient = this;
+
+        cubeDetList.Add(cDet);
     }
 
     void Disconnect(){

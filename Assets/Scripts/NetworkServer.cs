@@ -16,6 +16,9 @@ public class NetworkServer : MonoBehaviour
     private NativeList<NetworkConnection> m_Connections;
 
     public List<NetworkObjects.NetworkPlayer> clientList = new List<NetworkObjects.NetworkPlayer>();
+    public List<CubeDetails> cubeDetList = new List<CubeDetails>();
+
+    public GameObject cubePrefab;
 
     void Start ()
     {
@@ -26,6 +29,8 @@ public class NetworkServer : MonoBehaviour
             Debug.Log("Failed to bind to port " + serverPort);
         else
             m_Driver.Listen();
+
+        cubePrefab = (GameObject)Resources.Load("Prefabs/Cube");
 
         m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
         Debug.Log("Server Started");
@@ -70,7 +75,11 @@ public class NetworkServer : MonoBehaviour
         NetworkObjects.NetworkPlayer p = new NetworkObjects.NetworkPlayer();
         p.id = c.InternalId.ToString();
         clientList.Add(p);
-        
+
+        CubeDetails cDet = new CubeDetails(c.InternalId);
+        cDet.cube = GameObject.Instantiate(cubePrefab, p.cubPos, Quaternion.identity);
+        cDet.cube.GetComponent<MeshRenderer>().material.color = p.cubeColor;
+
         InitializeConnectionMsg icMsg = new InitializeConnectionMsg();
         icMsg.connectionID = c.InternalId.ToString();
         SendToClient(JsonUtility.ToJson(icMsg), c);
