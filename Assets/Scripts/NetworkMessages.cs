@@ -75,6 +75,7 @@ namespace NetworkObjects
 
         public NetworkPlayer(){
             cubeColor = new Color();
+            cubPos = new Vector3();
         }
     }
 }

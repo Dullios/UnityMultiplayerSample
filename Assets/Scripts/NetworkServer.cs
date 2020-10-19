@@ -6,12 +6,16 @@ using NetworkMessages;
 using System;
 using System.Text;
 using System.Collections;
+using NetworkObjects;
+using System.Collections.Generic;
 
 public class NetworkServer : MonoBehaviour
 {
     public NetworkDriver m_Driver;
     public ushort serverPort;
     private NativeList<NetworkConnection> m_Connections;
+
+    public List<NetworkObjects.NetworkPlayer> clientList = new List<NetworkObjects.NetworkPlayer>();
 
     void Start ()
     {
@@ -56,15 +60,27 @@ public class NetworkServer : MonoBehaviour
     {
         m_Driver.Dispose();
         m_Connections.Dispose();
+        clientList.Clear();
     }
 
     void OnConnect(NetworkConnection c){
         m_Connections.Add(c);
         Debug.Log("Accepted a connection");
 
+        NetworkObjects.NetworkPlayer p = new NetworkObjects.NetworkPlayer();
+        p.id = c.InternalId.ToString();
+        clientList.Add(p);
+        
         InitializeConnectionMsg icMsg = new InitializeConnectionMsg();
         icMsg.connectionID = c.InternalId.ToString();
         SendToClient(JsonUtility.ToJson(icMsg), c);
+
+        ServerUpdateMsg sMsg = new ServerUpdateMsg();
+        foreach(NetworkObjects.NetworkPlayer np in clientList)
+        {
+            sMsg.players.Add(np);
+        }
+        SendToClient(JsonUtility.ToJson(sMsg), c);
     }
 
     void OnData(DataStreamReader stream, int i){

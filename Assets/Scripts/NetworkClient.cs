@@ -6,15 +6,25 @@ using NetworkObjects;
 using System;
 using System.Text;
 using System.Collections;
+using System.Collections.Generic;
 
 public class NetworkClient : MonoBehaviour
 {
+    public struct CubeDetails
+    {
+        public int cubeID;
+        public bool isCreated;
+    }
+
     public NetworkDriver m_Driver;
     public NetworkConnection m_Connection;
     public string serverIP;
     public ushort serverPort;
 
     public int connectedID;
+    public GameObject cubePrefab;
+    public List<NetworkObjects.NetworkPlayer> playerList = new List<NetworkObjects.NetworkPlayer>();
+    public List<CubeDetails> cubeDetList = new List<CubeDetails>();
 
     void Start ()
     {
@@ -67,16 +77,41 @@ public class NetworkClient : MonoBehaviour
             case Commands.SERVER_UPDATE:
                 ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
                 Debug.Log("Server update message received!");
+
+                foreach (NetworkObjects.NetworkPlayer npServer in suMsg.players)
+                {
+                    if (playerList.Count < 1)
+                        playerList.Add(npServer);
+                    else
+                    {
+                        foreach (NetworkObjects.NetworkPlayer npClient in playerList)
+                        {
+                            if (npClient.id == npServer.id)
+                            {
+                                break;
+                            }
+
+                            playerList.Add(npServer);
+                            Debug.Log("NetworkPlayer Added");
+                        }
+                    }
+                }
                 break;
             case Commands.INITIALIZE:
                 InitializeConnectionMsg icMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
                 connectedID = int.Parse(icMsg.connectionID);
                 Debug.Log("Initialize Connection message received!");
+                Debug.Log("Connected ID of " + connectedID);
                 break;
             default:
                 Debug.Log("Unrecognized message received!");
                 break;
         }
+    }
+
+    void UpdateCubes()
+    {
+
     }
 
     void Disconnect(){
