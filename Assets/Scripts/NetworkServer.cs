@@ -114,6 +114,25 @@ public class NetworkServer : MonoBehaviour
             case Commands.PLAYER_UPDATE:
                 PlayerUpdateMsg puMsg = JsonUtility.FromJson<PlayerUpdateMsg>(recMsg);
                 Debug.Log("Player update message received!");
+
+                int index = 0;
+                foreach(NetworkObjects.NetworkPlayer p in clientList)
+                {
+                    if (puMsg.player.id == p.id)
+                        break;
+                    index++;
+                }
+                clientList[index] = puMsg.player;
+
+                ServerUpdateMsg sMsg = new ServerUpdateMsg();
+                sMsg.players = clientList;
+                for (int j = 0; j < m_Connections.Length; j++)
+                {
+                    if (!m_Connections[j].IsCreated)
+                        continue;
+
+                    SendToClient(JsonUtility.ToJson(sMsg), m_Connections[j]);
+                }
                 break;
             case Commands.SERVER_UPDATE:
                 ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);

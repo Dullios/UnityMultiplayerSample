@@ -38,6 +38,7 @@ public class NetworkClient : MonoBehaviour
     void OnConnect(){
         Debug.Log("We are now connected to the server");
         StartCoroutine(SendRepeatedHandshake());
+        StartCoroutine(SendRepeatedPlayerUpdate());
     }
 
     IEnumerator SendRepeatedHandshake()
@@ -49,6 +50,25 @@ public class NetworkClient : MonoBehaviour
             HandshakeMsg m = new HandshakeMsg();
             m.player.id = m_Connection.InternalId.ToString();
             SendToServer(JsonUtility.ToJson(m));
+        }
+    }
+
+    IEnumerator SendRepeatedPlayerUpdate()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(1.0f);
+            Debug.Log("SendingPosition");
+            PlayerUpdateMsg m = new PlayerUpdateMsg();
+            foreach(NetworkObjects.NetworkPlayer p in playerList)
+            {
+                if(int.Parse(p.id) == connectedID)
+                {
+                    m.player = p;
+                    SendToServer(JsonUtility.ToJson(m));
+                    break;
+                }
+            }
         }
     }
 
