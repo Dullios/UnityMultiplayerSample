@@ -80,7 +80,14 @@ public class NetworkServer : MonoBehaviour
         {
             sMsg.players.Add(np);
         }
-        SendToClient(JsonUtility.ToJson(sMsg), c);
+
+        for (int i = 0; i < m_Connections.Length; i++)
+        {
+            if (!m_Connections[i].IsCreated)
+                continue;
+
+            SendToClient(JsonUtility.ToJson(sMsg), m_Connections[i]);
+        }
     }
 
     void OnData(DataStreamReader stream, int i){
