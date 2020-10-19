@@ -122,7 +122,8 @@ public class NetworkServer : MonoBehaviour
                         break;
                     index++;
                 }
-                clientList[index] = puMsg.player;
+                clientList[index].cubPos = puMsg.player.cubPos;
+                Debug.Log("New Cube Position: " + clientList[index].cubPos);
 
                 ServerUpdateMsg sMsg = new ServerUpdateMsg();
                 sMsg.players = clientList;

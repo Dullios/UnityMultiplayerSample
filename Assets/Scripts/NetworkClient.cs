@@ -38,7 +38,6 @@ public class NetworkClient : MonoBehaviour
     void OnConnect(){
         Debug.Log("We are now connected to the server");
         StartCoroutine(SendRepeatedHandshake());
-        StartCoroutine(SendRepeatedPlayerUpdate());
     }
 
     IEnumerator SendRepeatedHandshake()
@@ -53,23 +52,16 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
-    IEnumerator SendRepeatedPlayerUpdate()
+    public void SendPlayerUpdate()
     {
-        while(true)
-        {
-            yield return new WaitForSeconds(1.0f);
-            Debug.Log("SendingPosition");
-            PlayerUpdateMsg m = new PlayerUpdateMsg();
-            foreach(NetworkObjects.NetworkPlayer p in playerList)
-            {
-                if(int.Parse(p.id) == connectedID)
-                {
-                    m.player = p;
-                    SendToServer(JsonUtility.ToJson(m));
-                    break;
-                }
-            }
-        }
+        int index = GetIndex(connectedID.ToString());
+
+        playerList[index].cubPos = cubeDetList[index].cube.transform.position;
+
+        PlayerUpdateMsg m = new PlayerUpdateMsg();
+        m.player = playerList[index];
+        SendToServer(JsonUtility.ToJson(m));
+        Debug.Log("Sent player update");
     }
 
     void OnData(DataStreamReader stream){
@@ -92,21 +84,23 @@ public class NetworkClient : MonoBehaviour
                 ServerUpdateMsg suMsg = JsonUtility.FromJson<ServerUpdateMsg>(recMsg);
                 Debug.Log("Server update message received!");
 
-                foreach (NetworkObjects.NetworkPlayer npServer in suMsg.players)
+                if (playerList.Count == 0)
                 {
-                    if (playerList.Count == 0)
-                        playerList.Add(npServer);
-                    else
+                    playerList = suMsg.players;
+                }
+                else
+                {
+                    foreach (NetworkObjects.NetworkPlayer npServer in suMsg.players)
                     {
-                        foreach (NetworkObjects.NetworkPlayer npClient in playerList)
-                        {
-                            if (npClient.id == npServer.id)
-                            {
-                                break;
-                            }
+                        int index = GetIndex(npServer.id);
 
+                        if(index >= playerList.Count)
+                        {
                             playerList.Add(npServer);
-                            Debug.Log("NetworkPlayer Added");
+                        }
+                        else
+                        {
+                            playerList[index] = npServer;
                         }
                     }
                 }
@@ -165,6 +159,20 @@ public class NetworkClient : MonoBehaviour
         cDet.cube.GetComponent<CubeController>().netClient = this;
 
         cubeDetList.Add(cDet);
+    }
+
+    int GetIndex(string id)
+    {
+        int index = 0;
+        foreach(NetworkObjects.NetworkPlayer p in playerList)
+        {
+            if (p.id == id)
+                break;
+
+            index++;
+        }
+
+        return index;
     }
 
     void Disconnect(){
