@@ -16,6 +16,7 @@ public class NetworkServer : MonoBehaviour
     private NativeList<NetworkConnection> m_Connections;
 
     public List<NetworkObjects.NetworkPlayer> clientList = new List<NetworkObjects.NetworkPlayer>();
+    public List<NetworkCube> cubeList = new List<NetworkCube>();
 
     public GameObject cubePrefab;
 
@@ -73,10 +74,13 @@ public class NetworkServer : MonoBehaviour
 
         NetworkObjects.NetworkPlayer p = new NetworkObjects.NetworkPlayer();
         p.id = c.InternalId.ToString();
-        p.cube = GameObject.Instantiate(cubePrefab, new Vector3(), Quaternion.identity);
-        p.cube.GetComponent<CubeController>().id = c.InternalId;
-        p.cube.GetComponent<MeshRenderer>().material.color = p.cubeColor;
         clientList.Add(p);
+
+        NetworkCube nCube = new NetworkCube(c.InternalId.ToString());
+        nCube.cube = GameObject.Instantiate(cubePrefab, p.cubePos, Quaternion.identity);
+        nCube.cube.GetComponent<CubeController>().id = c.InternalId;
+        nCube.cube.GetComponent<MeshRenderer>().material.color = p.cubeColor;
+        cubeList.Add(nCube);
 
         InitializeConnectionMsg icMsg = new InitializeConnectionMsg();
         icMsg.connectionID = c.InternalId.ToString();
@@ -120,8 +124,9 @@ public class NetworkServer : MonoBehaviour
                         break;
                     index++;
                 }
-                clientList[index].cube = puMsg.player.cube;
-                Debug.Log("New Cube Position: " + clientList[index].cube.transform.position);
+                clientList[index].cubePos = puMsg.player.cubePos;
+                cubeList[index].cube.transform.position = puMsg.player.cubePos;
+                Debug.Log("New Cube Position: " + clientList[index].cubePos);
 
                 ServerUpdateMsg sMsg = new ServerUpdateMsg();
                 sMsg.players = clientList;
@@ -150,6 +155,10 @@ public class NetworkServer : MonoBehaviour
     void OnDisconnect(int i){
         Debug.Log("Client disconnected from server");
         m_Connections[i] = default(NetworkConnection);
+        
+        clientList.RemoveAt(i);
+        Destroy(cubeList[i].cube);
+        cubeList.RemoveAt(i);
     }
 
     void Update ()

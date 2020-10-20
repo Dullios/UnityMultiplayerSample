@@ -70,11 +70,22 @@ namespace NetworkObjects
     }
     [System.Serializable]
     public class NetworkPlayer : NetworkObject{
-        public GameObject cube;
+        public Vector3 cubePos;
         public Color cubeColor;
 
         public NetworkPlayer(){
             cubeColor = new Color();
+            cubePos = new Vector3();
+        }
+    }
+
+    [System.Serializable]
+    public class NetworkCube : NetworkObject
+    {
+        public GameObject cube;
+        public NetworkCube(string _id)
+        {
+            id = _id;
         }
     }
 }

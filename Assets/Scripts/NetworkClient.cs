@@ -18,6 +18,7 @@ public class NetworkClient : MonoBehaviour
     public int connectedID;
     public GameObject cubePrefab;
     public List<NetworkObjects.NetworkPlayer> playerList = new List<NetworkObjects.NetworkPlayer>();
+    public List<NetworkCube> cubeList = new List<NetworkCube>();
 
     void Start ()
     {
@@ -54,6 +55,7 @@ public class NetworkClient : MonoBehaviour
     public void SendPlayerUpdate()
     {
         int index = GetIndex(connectedID.ToString());
+        playerList[index].cubePos = cubeList[index].cube.transform.position;
 
         PlayerUpdateMsg m = new PlayerUpdateMsg();
         m.player = playerList[index];
@@ -84,6 +86,10 @@ public class NetworkClient : MonoBehaviour
                 if (playerList.Count == 0)
                 {
                     playerList = suMsg.players;
+                    foreach(NetworkObjects.NetworkPlayer p in playerList)
+                    {
+                        CreateCube(p);
+                    }
                 }
                 else
                 {
@@ -99,6 +105,7 @@ public class NetworkClient : MonoBehaviour
                         else
                         {
                             playerList[index] = npServer;
+                            cubeList[index].cube.transform.position = npServer.cubePos;
                         }
                     }
                 }
@@ -117,10 +124,12 @@ public class NetworkClient : MonoBehaviour
 
     void CreateCube(NetworkObjects.NetworkPlayer npClient)
     {
-        npClient.cube = GameObject.Instantiate(cubePrefab, npClient.cube.transform.position, Quaternion.identity);
-        npClient.cube.GetComponent<CubeController>().id = int.Parse(npClient.id);
-        npClient.cube.GetComponent<MeshRenderer>().material.color = npClient.cubeColor;
-        npClient.cube.GetComponent<CubeController>().netClient = this;
+        NetworkCube nCube = new NetworkCube(npClient.id);
+        nCube.cube = GameObject.Instantiate(cubePrefab, npClient.cubePos, Quaternion.identity);
+        nCube.cube.GetComponent<CubeController>().id = int.Parse(npClient.id);
+        nCube.cube.GetComponent<MeshRenderer>().material.color = npClient.cubeColor;
+        nCube.cube.GetComponent<CubeController>().netClient = this;
+        cubeList.Add(nCube);
     }
 
     int GetIndex(string id)
