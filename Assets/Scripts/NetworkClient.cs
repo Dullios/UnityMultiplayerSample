@@ -18,7 +18,6 @@ public class NetworkClient : MonoBehaviour
     public int connectedID;
     public GameObject cubePrefab;
     public List<NetworkObjects.NetworkPlayer> playerList = new List<NetworkObjects.NetworkPlayer>();
-    public List<CubeDetails> cubeDetList = new List<CubeDetails>();
 
     void Start ()
     {
@@ -55,8 +54,6 @@ public class NetworkClient : MonoBehaviour
     public void SendPlayerUpdate()
     {
         int index = GetIndex(connectedID.ToString());
-
-        playerList[index].cubPos = cubeDetList[index].cube.transform.position;
 
         PlayerUpdateMsg m = new PlayerUpdateMsg();
         m.player = playerList[index];
@@ -97,6 +94,7 @@ public class NetworkClient : MonoBehaviour
                         if(index >= playerList.Count)
                         {
                             playerList.Add(npServer);
+                            CreateCube(npServer);
                         }
                         else
                         {
@@ -104,8 +102,6 @@ public class NetworkClient : MonoBehaviour
                         }
                     }
                 }
-
-                UpdateCubes();
                 break;
             case Commands.INITIALIZE:
                 InitializeConnectionMsg icMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
@@ -119,46 +115,12 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
-    void UpdateCubes()
-    {
-        if(cubeDetList.Count == 0)
-        {
-            foreach(NetworkObjects.NetworkPlayer npClient in playerList)
-            {
-                CreateCube(npClient);
-            }
-        }
-        else
-        {
-            bool hasCube = false;
-
-            foreach (NetworkObjects.NetworkPlayer npClient in playerList)
-            {
-                foreach(CubeDetails cd in cubeDetList)
-                {
-                    if(cd.cubeID == int.Parse(npClient.id))
-                    {
-                        cd.cube.transform.position = npClient.cubPos;
-                        hasCube = true;
-                    }
-                }
-
-                if(!hasCube)
-                {
-                    CreateCube(npClient);
-                }
-            }
-        }
-    }
-
     void CreateCube(NetworkObjects.NetworkPlayer npClient)
     {
-        CubeDetails cDet = new CubeDetails(int.Parse(npClient.id));
-        cDet.cube = GameObject.Instantiate(cubePrefab, npClient.cubPos, Quaternion.identity);
-        cDet.cube.GetComponent<MeshRenderer>().material.color = npClient.cubeColor;
-        cDet.cube.GetComponent<CubeController>().netClient = this;
-
-        cubeDetList.Add(cDet);
+        npClient.cube = GameObject.Instantiate(cubePrefab, npClient.cube.transform.position, Quaternion.identity);
+        npClient.cube.GetComponent<CubeController>().id = int.Parse(npClient.id);
+        npClient.cube.GetComponent<MeshRenderer>().material.color = npClient.cubeColor;
+        npClient.cube.GetComponent<CubeController>().netClient = this;
     }
 
     int GetIndex(string id)

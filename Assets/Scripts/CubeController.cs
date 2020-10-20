@@ -14,7 +14,7 @@ public class CubeController : MonoBehaviour
     void Update()
     {
         currentPos = gameObject.transform.position;
-
+        
         if(netClient != null && id == netClient.connectedID)
         {
             if (Input.GetKeyDown(KeyCode.LeftArrow))

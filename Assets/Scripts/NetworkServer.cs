@@ -16,7 +16,6 @@ public class NetworkServer : MonoBehaviour
     private NativeList<NetworkConnection> m_Connections;
 
     public List<NetworkObjects.NetworkPlayer> clientList = new List<NetworkObjects.NetworkPlayer>();
-    public List<CubeDetails> cubeDetList = new List<CubeDetails>();
 
     public GameObject cubePrefab;
 
@@ -74,11 +73,10 @@ public class NetworkServer : MonoBehaviour
 
         NetworkObjects.NetworkPlayer p = new NetworkObjects.NetworkPlayer();
         p.id = c.InternalId.ToString();
+        p.cube = GameObject.Instantiate(cubePrefab, new Vector3(), Quaternion.identity);
+        p.cube.GetComponent<CubeController>().id = c.InternalId;
+        p.cube.GetComponent<MeshRenderer>().material.color = p.cubeColor;
         clientList.Add(p);
-
-        CubeDetails cDet = new CubeDetails(c.InternalId);
-        cDet.cube = GameObject.Instantiate(cubePrefab, p.cubPos, Quaternion.identity);
-        cDet.cube.GetComponent<MeshRenderer>().material.color = p.cubeColor;
 
         InitializeConnectionMsg icMsg = new InitializeConnectionMsg();
         icMsg.connectionID = c.InternalId.ToString();
@@ -122,8 +120,8 @@ public class NetworkServer : MonoBehaviour
                         break;
                     index++;
                 }
-                clientList[index].cubPos = puMsg.player.cubPos;
-                Debug.Log("New Cube Position: " + clientList[index].cubPos);
+                clientList[index].cube = puMsg.player.cube;
+                Debug.Log("New Cube Position: " + clientList[index].cube.transform.position);
 
                 ServerUpdateMsg sMsg = new ServerUpdateMsg();
                 sMsg.players = clientList;
