@@ -146,6 +146,10 @@ public class NetworkServer : MonoBehaviour
                 InitializeConnectionMsg icMsg = JsonUtility.FromJson<InitializeConnectionMsg>(recMsg);
                 Debug.Log("Initialize Connection message received!");
                 break;
+            case Commands.PLAYER_DISCONNECT:
+                PlayerDisconnectMsg pdMsg = new PlayerDisconnectMsg();
+                Debug.Log("Player disconnect message received!");
+                break;
             default:
                 Debug.Log("SERVER ERROR: Unrecognized message received!");
                 break;
@@ -155,7 +159,18 @@ public class NetworkServer : MonoBehaviour
     void OnDisconnect(int i){
         Debug.Log("Client disconnected from server");
         m_Connections[i] = default(NetworkConnection);
-        
+
+        PlayerDisconnectMsg pdMsg = new PlayerDisconnectMsg();
+        Debug.Log("Player Disconnect ID: " + clientList[i].id);
+        pdMsg.connectionID = clientList[i].id;
+        for (int j = 0; j < m_Connections.Length; j++)
+        {
+            if (!m_Connections[j].IsCreated)
+                continue;
+
+            SendToClient(JsonUtility.ToJson(pdMsg), m_Connections[j]);
+        }
+
         clientList.RemoveAt(i);
         Destroy(cubeList[i].cube);
         cubeList.RemoveAt(i);

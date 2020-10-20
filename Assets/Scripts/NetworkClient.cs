@@ -95,17 +95,17 @@ public class NetworkClient : MonoBehaviour
                 {
                     foreach (NetworkObjects.NetworkPlayer npServer in suMsg.players)
                     {
-                        int index = GetIndex(npServer.id);
+                        int ind = GetIndex(npServer.id);
 
-                        if(index >= playerList.Count)
+                        if(ind >= playerList.Count)
                         {
                             playerList.Add(npServer);
                             CreateCube(npServer);
                         }
                         else
                         {
-                            playerList[index] = npServer;
-                            cubeList[index].cube.transform.position = npServer.cubePos;
+                            playerList[ind] = npServer;
+                            cubeList[ind].cube.transform.position = npServer.cubePos;
                         }
                     }
                 }
@@ -115,6 +115,16 @@ public class NetworkClient : MonoBehaviour
                 connectedID = int.Parse(icMsg.connectionID);
                 Debug.Log("Initialize Connection message received!");
                 Debug.Log("Connected ID of " + connectedID);
+                break;
+            case Commands.PLAYER_DISCONNECT:
+                PlayerDisconnectMsg pdMsg = JsonUtility.FromJson<PlayerDisconnectMsg>(recMsg);
+                Debug.Log("Player disconnect message received!");
+                
+                int index = GetIndex(pdMsg.connectionID);
+                
+                playerList.RemoveAt(index);
+                Destroy(cubeList[index].cube);
+                cubeList.RemoveAt(index);
                 break;
             default:
                 Debug.Log("Unrecognized message received!");

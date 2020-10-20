@@ -9,7 +9,8 @@ namespace NetworkMessages
         SERVER_UPDATE,
         HANDSHAKE,
         PLAYER_INPUT,
-        INITIALIZE
+        INITIALIZE,
+        PLAYER_DISCONNECT
     }
 
     [System.Serializable]
@@ -58,6 +59,16 @@ namespace NetworkMessages
         public InitializeConnectionMsg()
         {
             cmd = Commands.INITIALIZE;
+        }
+    }
+
+    [System.Serializable]
+    public class PlayerDisconnectMsg:NetworkHeader
+    {
+        public string connectionID;
+        public PlayerDisconnectMsg()
+        {
+            cmd = Commands.PLAYER_DISCONNECT;
         }
     }
 } 
